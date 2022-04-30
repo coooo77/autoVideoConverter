@@ -5,6 +5,35 @@ import chalk from 'chalk'
 export default class Common {
   static errorLogPath = path.join(__dirname, '../log')
 
+  static msg(
+    msg: string,
+    msgType: 'warn' | 'info' | 'success' | 'fail' | 'error' = 'info'
+  ) {
+    const { log } = console
+
+    const type = ` ${msgType} `
+
+    switch (msgType) {
+      case 'warn':
+        log(chalk.bgYellow(type), chalk.yellow(msg))
+        break
+      case 'info':
+        log(chalk.bgBlue(type), chalk.blue(msg))
+        break
+      case 'success':
+        log(chalk.bgGreen(type), chalk.green(msg))
+        break
+      case 'fail':
+        log(chalk.bgRed(type), chalk.red(msg))
+        break
+      case 'error':
+        log(chalk.bgRed(type), chalk.bgRed.yellow(msg))
+        break
+      default:
+        break
+    }
+  }
+
   static wait(seconds: number) {
     return new Promise((resolve) => setTimeout(resolve, seconds * 1000))
   }
