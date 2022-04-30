@@ -1,0 +1,31 @@
+{
+  "name": "autovideoconverter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev:build": "tsc -w",
+    "dev:start": "nodemon node ./dist/index.js",
+    "dev": "concurrently npm:dev:*"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "dist/model/*"
+    ]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "fluent-ffmpeg": "^2.1.2"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.2",
+    "@types/fluent-ffmpeg": "^2.1.20",
+    "@types/node": "^17.0.30",
+    "concurrently": "^7.1.0",
+    "nodemon": "^2.0.16",
+    "typescript": "^4.6.4"
+  }
+}
