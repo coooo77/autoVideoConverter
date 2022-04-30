@@ -29,7 +29,7 @@
   "sourceFolder": ["E:\\path\\to\\folder1", "E:\\path\\to\\folder2"],
   "convertFolder": "",
   "outputFolder": "",
-  "includeExt": ["ts", "flv"],
+  "includeExt": ["ts", "flv", "mp4"],
   "exceptions": [],
   "ffmpegPath": "",
   "probePath": "",
