@@ -1,5 +1,11 @@
 # autoVideoConverter
 
+## Prerequisite：
+
+1. install ffmpeg (required)
+
+2. set ffmpeg and ffprobe to Path in the environment variable (optional)
+
 ## installation and execution：
 
 1. download repository
