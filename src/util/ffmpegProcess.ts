@@ -51,9 +51,15 @@ const handleMute = mute ? ['-an'] : []
 
 const outputOptions = handleType.concat(handleMute)
 
+let isStarted = false
+
 const cmd = ffmpeg(source)
   .outputOptions(outputOptions)
-  .on('end', process.exit)
+  .on('end', () => {
+    Common.msg(`Convert finished at ${new Date().toLocaleString()}`, 'success')
+
+    process.exit()
+  })
   .on('error', (error) => {
     console.dir(error)
     const err = error as { message: string }
@@ -63,11 +69,15 @@ const cmd = ffmpeg(source)
     Common.msg(err.message, 'error')
   })
   .on('start', (commandLine: string) => {
-    Common.msg('Spawned Ffmpeg with command: ' + commandLine)
+    if (isStarted) return
+
+    // Common.msg('Spawned Ffmpeg with command: ' + commandLine)
 
     Common.msg(
       `Start convert file: ${filename} at ${new Date().toLocaleString()}`
     )
+
+    isStarted = true
   })
 
 if (!hideCmdWindow) {

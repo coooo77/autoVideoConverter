@@ -20,6 +20,8 @@ export default class Main {
 
   static _config: Config[] = []
 
+  static timesOfCheck = 0
+
   static get config() {
     return Main._config[0]
   }
@@ -31,6 +33,7 @@ export default class Main {
     'exceptions',
     'ffmpegPath',
     'probePath',
+    'screenshotConfig',
     'screenshotFolder',
   ]
 
@@ -134,6 +137,10 @@ export default class Main {
   }
 
   static async setTimer() {
+    Common.msg(
+      `[${Main.timesOfCheck++}] Start to check at ${new Date().toLocaleString()}`
+    )
+
     Main.upDateConfig()
 
     const { checkInterval } = Main.config
@@ -144,7 +151,8 @@ export default class Main {
   }
 
   static handleConvert() {
-    if (Main.isProcessExist()) return
+    if (Main.isProcessExist())
+      return Common.msg('Process is ongoing, skip check ...')
 
     const files = Main.getFiles()
 
@@ -163,12 +171,30 @@ export default class Main {
 
     Main.currentProcess = fork(path.join(__dirname, 'convert.js'), [payload])
 
+    Main.currentProcess.on('error', (error) => {
+      Common.errorHandler(error)
+
+      process.exit()
+    })
+
     Main.currentProcess.on('close', (code) => {
       Main.currentProcess?.off('close', () => {})
 
-      Common.msg('DONE', 'success')
+      Main.currentProcess?.off('error', () => {})
 
-      // handle delete original file and move them to outputFolder
+      setTimeout(() => {
+        const { keepFile } = Main.config.convertOption
+
+        const { convertFolder, outputFolder } = Main.config
+
+        if (keepFile) {
+          Common.checkMoveFiles(filenames, convertFolder, outputFolder)
+        } else {
+          filenames.forEach((i) => Common.deleteFile(convertFolder, i))
+        }
+
+        Main.currentProcess = null
+      }, 5 * 1000)
     })
   }
 

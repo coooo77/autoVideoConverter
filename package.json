@@ -6,7 +6,8 @@
   "scripts": {
     "dev:build": "tsc -w",
     "dev:start": "nodemon node ./dist/index.js",
-    "dev": "concurrently npm:dev:*"
+    "dev": "tsc && concurrently npm:dev:*",
+    "start": "npx tsc && node ./dist/index.js"
   },
   "nodemonConfig": {
     "ignore": [

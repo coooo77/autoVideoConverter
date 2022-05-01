@@ -153,4 +153,14 @@ export default class Common {
       Common.msg(`Can not move file at: ${fromPath}`, 'fail')
     }
   }
+
+  static deleteFile(filePath: string, fileName: string) {
+    try {
+      fs.unlinkSync(`${filePath}\\${fileName}`)
+    } catch (error) {
+      Common.errorHandler(error)
+
+      Common.msg(`Can not delete file ${fileName}`, 'fail')
+    }
+  }
 }
