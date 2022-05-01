@@ -123,4 +123,32 @@ export default class Common {
 
     return defaultData
   }
+
+  /**
+   * check if a file is busy and move to location specified
+   * @param {string[]} fileNames filenames
+   * @param {string} from original root path
+   * @param {string} to target path
+   */
+  static checkMoveFiles(fileNames: string[], from: string, to: string) {
+    for (const fileName of fileNames) {
+      const fromPath = `${from}\\${fileName}`
+
+      if (fs.existsSync(fromPath)) {
+        const toPath = `${to}\\${fileName}`
+
+        Common.moveFile(fromPath, toPath)
+      } else {
+        Common.msg(`Can not find file at: ${fromPath}`, 'fail')
+      }
+    }
+  }
+
+  static moveFile(fromPath: string, toPath: string) {
+    try {
+      fs.renameSync(fromPath, toPath)
+    } catch (error) {
+      Common.msg(`Can not move file at: ${fromPath}`, 'fail')
+    }
+  }
 }

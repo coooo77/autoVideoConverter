@@ -5,10 +5,16 @@ import Common from './common'
 import { Config } from '../types/config'
 import { ChildProcess, fork } from 'child_process'
 
-export default class Main extends Common {
+export default class Main {
   static currentProcess: ChildProcess | null = null
 
   static checkTimer: NodeJS.Timeout | null = null
+
+  static _config: Config[] = []
+
+  static get config() {
+    return Main._config[0]
+  }
 
   static configPath = path.join(__dirname, '..', '..')
 
@@ -16,27 +22,31 @@ export default class Main extends Common {
 
   static getConfig() {
     try {
-      return this.getFile(this.configPath, 'config') as Config
+      return Common.getFile(Main.configPath, 'config') as Config
     } catch (e) {
-      this.msg('can not find config.json', 'error')
+      Common.msg('can not find config.json', 'error')
 
-      this.errorHandler('can not find config.json')
+      Common.errorHandler('can not find config.json')
 
       process.exit(1)
     }
   }
 
+  static upDateConfig() {
+    Main._config = [Main.getConfig()]
+  }
+
   static checkPrerequisite() {
-    const config = this.getConfig()
+    Main.upDateConfig()
 
-    this.msg('Check config before app start...')
+    Common.msg('Check config before app start...')
 
-    const isAbleToRun = this.checkConfigs(config, this.optionalConfigKey)
+    const isAbleToRun = Main.checkConfigs(Main.config, Main.optionalConfigKey)
 
     if (isAbleToRun) {
-      this.msg('App is ready to run..', 'success')
+      Common.msg('App is ready to run..', 'success')
     } else {
-      this.msg('Incomplete config, Set App before running', 'error')
+      Common.msg('Incomplete config, Set App before running', 'error')
 
       process.exit(1)
     }
@@ -69,7 +79,7 @@ export default class Main extends Common {
 
           if (isArray && obj[key].length !== 0) continue
 
-          if (isObj && this.checkConfigs(obj[key], ignoreKey)) continue
+          if (isObj && Main.checkConfigs(obj[key], ignoreKey)) continue
 
           invalidKeys.push(key)
 
@@ -88,63 +98,67 @@ export default class Main extends Common {
     }
 
     for (const key of invalidKeys) {
-      this.msg(`Invalid config key: ${key}`, 'warn')
+      Common.msg(`Invalid config key: ${key}`, 'warn')
     }
 
     return invalidKeys.length === 0
   }
 
   static async init() {
-    process.on('beforeExit', this.handleInterrupt)
+    process.on('beforeExit', Main.handleInterrupt)
 
-    this.setTimer()
+    Main.setTimer()
   }
 
   static handleInterrupt() {
-    if (this.currentProcess?.pid)
-      this.killProcessIfAlive(this.currentProcess.pid)
+    if (Main.currentProcess?.pid)
+      Common.killProcessIfAlive(Main.currentProcess.pid)
 
-    if (this.checkTimer) clearTimeout(this.checkTimer)
+    if (Main.checkTimer) clearTimeout(Main.checkTimer)
   }
 
   static async setTimer() {
-    const { checkInterval } = this.getConfig()
+    Main.upDateConfig()
 
-    this.handleConvert()
+    const { checkInterval } = Main.config
 
-    this.checkTimer = setTimeout(this.setTimer, checkInterval * 1000)
+    Main.handleConvert()
+
+    Main.checkTimer = setTimeout(Main.setTimer, checkInterval * 1000)
   }
 
   static handleConvert() {
-    if (this.isProcessExist()) return
+    if (Main.isProcessExist()) return
 
-    const files = this.getFiles()
+    const files = Main.getFiles()
 
-    if (files.length === 0) return
+    if (Object.values(files).every((i) => i.length === 0)) return
 
-    console.log('files', files)
+    for (const [filePath, filename] of Object.entries(files)) {
+      Common.checkMoveFiles(filename, filePath, Main.config.convertFolder)
+    }
+
+    Common.msg('done')
   }
 
   static isProcessExist() {
-    return Boolean(this.currentProcess)
+    return Boolean(Main.currentProcess)
   }
 
   static getFiles() {
-    const config = this.getConfig()
-
-    const { sourceFolder, includeExt, exceptions } = config
+    const { sourceFolder, includeExt, exceptions } = Main.config
 
     return sourceFolder.reduce((filesPath, sourcePath) => {
-      const files = fs
+      filesPath[sourcePath] = fs
         .readdirSync(sourcePath)
         .filter(
           (filename) =>
-            this.isValidExtName(filename, includeExt) &&
-            this.isValidTarget(filename, exceptions)
+            Main.isValidExtName(filename, includeExt) &&
+            Main.isValidTarget(filename, exceptions)
         )
 
-      return filesPath.concat(...files)
-    }, [] as string[])
+      return filesPath
+    }, {} as { [key: string]: string[] })
   }
 
   static isValidExtName(filename: string, checkList: string[]) {
