@@ -9,7 +9,7 @@
     "__ffmpegPath": "<string> path of ffmpeg",
     "__probePath": "<string> path of probe",
     "__screenshotFolder": "<string> folder path to screenshot",
-    "__screenshotConfig": "see https://www.npmjs.com/package/fluent-ffmpeg",
+    "__screenshotConfig": "see https://www.npmjs.com/package/fluent-ffmpeg#screenshotsoptions-dirname-generate-thumbnails",
     "__screenshotConfig.folder": "<string>",
     "__screenshotConfig.filename": "<string>",
     "__screenshotConfig.count": "<number>",
