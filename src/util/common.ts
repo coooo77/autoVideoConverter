@@ -48,7 +48,9 @@ export default class Common {
     }
   }
 
-  static killProcessIfAlive(pid: number) {
+  static killProcessIfAlive(pid?: number) {
+    if (typeof pid === 'undefined') return
+
     if (!Common.isProcessRunning(pid)) return
 
     process.kill(pid, 'SIGTERM')

@@ -5,6 +5,14 @@ import Common from './common'
 import { Config } from '../types/config'
 import { ChildProcess, fork } from 'child_process'
 
+type FolderPath = string
+
+type Filename = string
+
+export interface FilesToConvert {
+  [key: FolderPath]: Filename[]
+}
+
 export default class Main {
   static currentProcess: ChildProcess | null = null
 
@@ -18,7 +26,13 @@ export default class Main {
 
   static configPath = path.join(__dirname, '..', '..')
 
-  static optionalConfigKey = ['__comment', 'exceptions']
+  static optionalConfigKey = [
+    '__comment',
+    'exceptions',
+    'ffmpegPath',
+    'probePath',
+    'screenshotFolder',
+  ]
 
   static getConfig() {
     try {
@@ -107,6 +121,8 @@ export default class Main {
   static async init() {
     process.on('beforeExit', Main.handleInterrupt)
 
+    process.on('SIGINT', Main.handleInterrupt)
+
     Main.setTimer()
   }
 
@@ -138,7 +154,22 @@ export default class Main {
       Common.checkMoveFiles(filename, filePath, Main.config.convertFolder)
     }
 
-    Common.msg('done')
+    const filenames = Object.values(files).reduce(
+      (acc, cur) => acc.concat(...cur),
+      []
+    )
+
+    const payload = JSON.stringify(filenames)
+
+    Main.currentProcess = fork(path.join(__dirname, 'convert.js'), [payload])
+
+    Main.currentProcess.on('close', (code) => {
+      Main.currentProcess?.off('close', () => {})
+
+      Common.msg('DONE', 'success')
+
+      // handle delete original file and move them to outputFolder
+    })
   }
 
   static isProcessExist() {
@@ -149,7 +180,7 @@ export default class Main {
     const { sourceFolder, includeExt, exceptions } = Main.config
 
     return sourceFolder.reduce((filesPath, sourcePath) => {
-      filesPath[sourcePath] = fs
+      const files = fs
         .readdirSync(sourcePath)
         .filter(
           (filename) =>
@@ -157,8 +188,10 @@ export default class Main {
             Main.isValidTarget(filename, exceptions)
         )
 
+      if (files.length !== 0) filesPath[sourcePath] = files
+
       return filesPath
-    }, {} as { [key: string]: string[] })
+    }, {} as FilesToConvert)
   }
 
   static isValidExtName(filename: string, checkList: string[]) {
